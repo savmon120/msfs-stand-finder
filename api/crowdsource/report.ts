@@ -63,11 +63,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Create crowdsourced report
     const report = await prisma.crowdsourcedReport.create({
       data: {
-        flight: flight.toUpperCase(),
-        callsign: callsign?.toUpperCase() || null,
-        standId: stand.id,
+        flightIdentifier: flight.toUpperCase(),
+        airportId: airport.id,
+        standName: stand.standName,
         timestamp: timestamp ? new Date(timestamp) : new Date(),
-        source: source || 'web',
+        reporterId: source || 'web',
         verified: false,
       },
     });
@@ -75,7 +75,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(201).json({
       message: 'Report submitted successfully',
       reportId: report.id,
-      flight: report.flight,
+      flight: report.flightIdentifier,
       stand: stand.standName,
       airport: airport.id,
     });
