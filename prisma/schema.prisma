@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Airport {
+  id        String   @id // ICAO code
+  iata      String?
+  name      String
+  city      String?
+  country   String
+  latitude  Float
+  longitude Float
+  altitude  Int?
+  timezone  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stands                   Stand[]
+  airlineTerminalAssignments AirlineTerminalAssignment[]
+  airlineStandPatterns     AirlineStandPattern[]
+  flightCache              FlightCache[]
+  crowdsourcedReports      CrowdsourcedReport[]
+
+  @@index([iata])
+  @@index([country])
+}
+
+model Stand {
+  id                String   @id @default(cuid())
+  airportId         String
+  standName         String
+  terminal          String?
+  maxWingspanM      Float?
+  maxLengthM        Float?
+  aircraftSizeCode  String?  // A, B, C, D, E, F (ICAO Aerodrome Reference Code)
+  latitude          Float?
+  longitude         Float?
+  airlinePreference String?  // Preferred airline ICAO code
+  notes             String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  airport Airport @relation(fields: [airportId], references: [id], onDelete: Cascade)
+
+  @@unique([airportId, standName])
+  @@index([airportId])
+  @@index([terminal])
+  @@index([airlinePreference])
+}
+
+model AirlineTerminalAssignment {
+  id           String   @id @default(cuid())
+  airportId    String
+  airlineIcao  String
+  airlineIata  String?
+  terminal     String
+  priority     Int      @default(1) // Higher = preferred terminal
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  airport Airport @relation(fields: [airportId], references: [id], onDelete: Cascade)
+
+  @@unique([airportId, airlineIcao, terminal])
+  @@index([airportId, airlineIcao])
+}
+
+model AirlineStandPattern {
+  id               String   @id @default(cuid())
+  airportId        String
+  airlineIcao      String
+  airlineIata      String?
+  standName        String
+  probabilityScore Float    // 0.0 to 1.0
+  usageCount       Int      @default(1)
+  lastSeen         DateTime @default(now())
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  airport Airport @relation(fields: [airportId], references: [id], onDelete: Cascade)
+
+  @@unique([airportId, airlineIcao, standName])
+  @@index([airportId, airlineIcao])
+  @@index([probabilityScore])
+}
+
+model FlightCache {
+  id                 String   @id @default(cuid())
+  flightIdentifier   String   // Flight number or callsign
+  airportId          String
+  arrivalTimestamp   DateTime
+  resolvedStand      String?
+  confidence         Float?
+  fallbackLevel      Int?
+  dataSources        String?  // JSON array
+  rawDataJson        String?  // Full raw data
+  createdAt          DateTime @default(now())
+  expiresAt          DateTime
+
+  airport Airport @relation(fields: [airportId], references: [id], onDelete: Cascade)
+
+  @@index([flightIdentifier, airportId, arrivalTimestamp])
+  @@index([expiresAt])
+}
+
+model CrowdsourcedReport {
+  id                String   @id @default(cuid())
+  airportId         String
+  standName         String
+  flightIdentifier  String?
+  timestamp         DateTime
+  reporterId        String?  // Anonymous or user ID
+  confidenceScore   Float    @default(0.5)
+  verified          Boolean  @default(false)
+  moderationStatus  String   @default("pending") // pending, approved, rejected
+  notes             String?
+  metadata          String?  // JSON for additional data
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  airport Airport @relation(fields: [airportId], references: [id], onDelete: Cascade)
+
+  @@index([airportId, standName])
+  @@index([moderationStatus])
+  @@index([verified])
+}
+
+model Aircraft {
+  id            String   @id @default(cuid())
+  icaoType      String   @unique
+  iataType      String?
+  manufacturer  String?
+  model         String?
+  wingspanM     Float?
+  lengthM       Float?
+  sizeCode      String?  // A, B, C, D, E, F
+  category      String?  // light, medium, heavy, super
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([icaoType])
+  @@index([sizeCode])
+}
+
+model StandMapping {
+  id              String   @id @default(cuid())
+  airportId       String
+  realWorldName   String
+  sceneryProvider String   // "default", "MSFS", "GSX", etc.
+  sceneryName     String
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([airportId, realWorldName, sceneryProvider])
+  @@index([airportId, sceneryProvider])
+}

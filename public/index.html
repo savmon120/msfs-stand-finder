@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aviation Stand Finder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .result {
+            margin-top: 20px;
+        }
+
+        .stand-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stand-number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stand-details h3 {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .stand-details p {
+            color: #666;
+        }
+
+        .confidence-bar {
+            margin: 20px 0;
+        }
+
+        .confidence-bar label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .progress {
+            width: 100%;
+            height: 30px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .metadata {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .metadata-item {
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .metadata-item label {
+            display: block;
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metadata-item value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #c33;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 12px;
+            background: #e0e7ff;
+            color: #667eea;
+            margin-right: 5px;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .search-form {
+                flex-direction: column;
+            }
+
+            .stand-number {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✈️ Aviation Stand Finder</h1>
+            <p>Real-world parking stand identification for arriving flights</p>
+        </div>
+
+        <div class="card">
+            <form class="search-form" id="searchForm">
+                <input 
+                    type="text" 
+                    id="flightInput" 
+                    placeholder="Enter flight number (e.g., BA1489, BAW1489)" 
+                    required
+                />
+                <button type="submit" id="searchBtn">Find Stand</button>
+            </form>
+
+            <div id="result"></div>
+        </div>
+
+        <div class="footer">
+            <p>Open source aviation data • UK airports & major hubs</p>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('searchForm');
+        const input = document.getElementById('flightInput');
+        const button = document.getElementById('searchBtn');
+        const resultDiv = document.getElementById('result');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const flight = input.value.trim();
+            if (!flight) return;
+
+            button.disabled = true;
+            button.textContent = 'Searching...';
+            resultDiv.innerHTML = '<div class="loading">🔍 Searching for stand information...</div>';
+
+            try {
+                const response = await fetch(`/api/stand?flight=${encodeURIComponent(flight)}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to find stand');
+                }
+
+                displayResult(data);
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ❌ ${error.message}
+                    </div>
+                `;
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Find Stand';
+            }
+        });
+
+        function displayResult(data) {
+            const confidencePercent = Math.round(data.confidence * 100);
+            
+            resultDiv.innerHTML = `
+                <div class="result">
+                    <div class="stand-info">
+                        <div class="stand-number">${data.stand}</div>
+                        <div class="stand-details">
+                            <h3>Stand ${data.stand}</h3>
+                            <p>${data.terminal ? `Terminal ${data.terminal}` : 'Terminal information unavailable'}</p>
+                        </div>
+                    </div>
+
+                    <div class="confidence-bar">
+                        <label>Confidence Score</label>
+                        <div class="progress">
+                            <div class="progress-bar" style="width: ${confidencePercent}%">
+                                ${confidencePercent}%
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="metadata">
+                        <div class="metadata-item">
+                            <label>Flight</label>
+                            <value>${data.flight}</value>
+                        </div>
+                        <div class="metadata-item">
+                            <label>Airport</label>
+                            <value>${data.airport || 'N/A'}</value>
+                        </div>
+                        <div class="metadata-item">
+                            <label>Fallback Stage</label>
+                            <value>${data.fallbackStage}</value>
+                        </div>
+                        <div class="metadata-item">
+                            <label>Method</label>
+                            <value>${data.fallbackStageName}</value>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <label style="display: block; margin-bottom: 8px; color: #666; font-weight: 600;">
+                            Data Sources
+                        </label>
+                        ${data.sources.map(s => `<span class="badge">${s}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

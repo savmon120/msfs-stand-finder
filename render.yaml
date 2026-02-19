@@ -1,0 +1,22 @@
+# Render deployment configuration
+
+services:
+  - type: web
+    name: aviation-stand-finder
+    env: node
+    plan: free
+    buildCommand: npm install && npm run prisma:generate && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: ADSBEXCHANGE_API_KEY
+        sync: false
+      - key: AVIATIONSTACK_API_KEY
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: USE_REDIS
+        value: false
