@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(_req: VercelRequest, res: VercelResponse) {
   try {
     const html = readFileSync(join(process.cwd(), 'public', 'index.html'), 'utf-8');
     res.setHeader('Content-Type', 'text/html');
