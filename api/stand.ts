@@ -9,7 +9,7 @@ async function getFlightFromOpenSky(flightNumber: string) {
     const response = await fetch(`https://opensky-network.org/api/flights/all?begin=${Math.floor(Date.now() / 1000) - 86400}&end=${Math.floor(Date.now() / 1000)}`);
     if (!response.ok) return null;
     
-    const data = await response.json();
+    const data = await response.json() as any[];
     const flight = data.find((f: any) => f.callsign?.trim().toUpperCase() === flightNumber);
     
     if (flight && flight.estArrivalAirport) {
