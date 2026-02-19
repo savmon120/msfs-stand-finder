@@ -1,11 +1,11 @@
 import { PrismaClient } from '@prisma/client';
+import { VercelRequest, VercelResponse } from '@vercel/node';
 import { StandResolutionEngine } from '../src/services/stand-resolution.service';
-import { FlightInputSchema } from '../src/types/schemas';
 
 const prisma = new PrismaClient();
 const standEngine = new StandResolutionEngine(prisma);
 
-export default async function handler(req, res) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');

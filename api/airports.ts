@@ -1,8 +1,9 @@
 import { PrismaClient } from '@prisma/client';
+import { VercelRequest, VercelResponse } from '@vercel/node';
 
 const prisma = new PrismaClient();
 
-export default async function handler(req, res) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -24,20 +25,20 @@ export default async function handler(req, res) {
       airports = await prisma.airport.findMany({
         where: {
           OR: [
-            { icaoCode: { contains: search.toUpperCase() } },
-            { iataCode: { contains: search.toUpperCase() } },
+            { id: { contains: search.toUpperCase() } },
+            { iata: { contains: search.toUpperCase() } },
             { name: { contains: search } },
             { city: { contains: search } },
             { country: { contains: search } },
           ],
         },
         take: parseInt(limit as string, 10),
-        orderBy: { icaoCode: 'asc' },
+        orderBy: { id: 'asc' },
       });
     } else {
       airports = await prisma.airport.findMany({
         take: parseInt(limit as string, 10),
-        orderBy: { icaoCode: 'asc' },
+        orderBy: { id: 'asc' },
       });
     }
 

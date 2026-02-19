@@ -1,8 +1,9 @@
 import { PrismaClient } from '@prisma/client';
+import { VercelRequest, VercelResponse } from '@vercel/node';
 
 const prisma = new PrismaClient();
 
-export default async function handler(req, res) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -26,9 +27,9 @@ export default async function handler(req, res) {
       });
     }
 
-    // Find airport
+    // Find airport (id is ICAO code)
     const airport = await prisma.airport.findUnique({
-      where: { icaoCode: airportIcao.toUpperCase() },
+      where: { id: airportIcao.toUpperCase() },
     });
 
     if (!airport) {
@@ -42,7 +43,7 @@ export default async function handler(req, res) {
     let stand = await prisma.stand.findFirst({
       where: {
         airportId: airport.id,
-        standNumber: standNumber.toUpperCase(),
+        standName: standNumber.toUpperCase(),
       },
     });
 
@@ -51,7 +52,7 @@ export default async function handler(req, res) {
       stand = await prisma.stand.create({
         data: {
           airportId: airport.id,
-          standNumber: standNumber.toUpperCase(),
+          standName: standNumber.toUpperCase(),
           terminal: null,
           latitude: null,
           longitude: null,
@@ -75,8 +76,8 @@ export default async function handler(req, res) {
       message: 'Report submitted successfully',
       reportId: report.id,
       flight: report.flight,
-      stand: stand.standNumber,
-      airport: airport.icaoCode,
+      stand: stand.standName,
+      airport: airport.id,
     });
   } catch (error) {
     console.error('Crowdsource report error:', error);
