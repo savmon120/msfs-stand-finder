@@ -44,11 +44,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         "contactStand" BOOLEAN NOT NULL DEFAULT false,
         "latitude" DOUBLE PRECISION,
         "longitude" DOUBLE PRECISION,
+        "airlinePreference" TEXT,
+        "notes" TEXT,
+        "isActive" BOOLEAN NOT NULL DEFAULT true,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY ("airportId") REFERENCES "Airport"("id") ON DELETE CASCADE ON UPDATE CASCADE
       );
     `);
+
+    // Add missing columns to Stand if they don't exist
+    await prisma.$executeRawUnsafe(`ALTER TABLE "Stand" ADD COLUMN IF NOT EXISTS "airlinePreference" TEXT;`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "Stand" ADD COLUMN IF NOT EXISTS "notes" TEXT;`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "Stand" ADD COLUMN IF NOT EXISTS "isActive" BOOLEAN NOT NULL DEFAULT true;`);
 
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS "Aircraft" (
