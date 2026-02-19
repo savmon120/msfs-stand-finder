@@ -67,6 +67,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       );
     `);
 
+    // Add category column if it doesn't exist
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "Aircraft" ADD COLUMN IF NOT EXISTS "category" TEXT;
+    `);
+
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS "AirlineTerminalAssignment" (
         "id" TEXT PRIMARY KEY,
