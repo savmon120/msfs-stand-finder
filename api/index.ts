@@ -27,12 +27,15 @@ export default function handler(_req: VercelRequest, res: VercelResponse) {
             margin-bottom: 20px;
         }
         .search-form { display: flex; gap: 10px; margin-bottom: 20px; }
-        input[type="text"] {
+        input[type="text"], select {
             flex: 1;
             padding: 15px;
             font-size: 16px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
+        }
+        select {
+            flex: 0.7;
         }
         button {
             padding: 15px 30px;
@@ -68,7 +71,13 @@ export default function handler(_req: VercelRequest, res: VercelResponse) {
         </div>
         <div class="card">
             <form class="search-form" id="searchForm">
-                <input type="text" id="flightInput" placeholder="Enter flight number (e.g., BA1489, BAW1489)" required />
+                <input type="text" id="flightInput" placeholder="Flight number (e.g., BA1489)" required />
+                <select id="airportSelect" required>
+                    <option value="">Select Airport</option>
+                    <option value="EGLL">EGLL - London Heathrow</option>
+                    <option value="EGKK">EGKK - London Gatwick</option>
+                    <option value="EGCC">EGCC - Manchester</option>
+                </select>
                 <button type="submit">Find Stand</button>
             </form>
             <div id="result"></div>
@@ -78,11 +87,12 @@ export default function handler(_req: VercelRequest, res: VercelResponse) {
         document.getElementById('searchForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const flight = document.getElementById('flightInput').value;
+            const airport = document.getElementById('airportSelect').value;
             const result = document.getElementById('result');
             result.innerHTML = '<p>🔍 Searching for stand information...</p>';
             
             try {
-                const res = await fetch('/api/stand?flight=' + encodeURIComponent(flight));
+                const res = await fetch('/api/stand?flight=' + encodeURIComponent(flight) + '&airport=' + encodeURIComponent(airport));
                 const data = await res.json();
                 
                 if (res.ok) {
