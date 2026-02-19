@@ -1,8 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
-export default async function handler(_req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Content-Type', 'text/html');
-  return res.status(200).send(`
+export default function handler(_req: VercelRequest, res: VercelResponse) {
+  const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -107,6 +106,8 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
         });
     </script>
 </body>
-</html>
-  `);
+</html>`;
+  
+  res.setHeader('Content-Type', 'text/html');
+  return res.status(200).send(html);
 }
