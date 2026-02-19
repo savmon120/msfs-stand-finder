@@ -1,9 +1,12 @@
 {
   "version": 2,
-  "buildCommand": "npm run prisma:generate && npm run build",
+  "installCommand": "npm install && npx prisma generate",
   "rewrites": [
     { "source": "/", "destination": "/api/index" },
     { "source": "/api/(.*)", "destination": "/api/$1" }
-  ]
+  ],
+  "env": {
+    "DATABASE_URL": "@database_url"
+  }
 }
 
