@@ -73,7 +73,7 @@ export default function handler(_req: VercelRequest, res: VercelResponse) {
             <form class="search-form" id="searchForm">
                 <input type="text" id="flightInput" placeholder="Flight number (e.g., BA1489)" required />
                 <select id="airportSelect" required>
-                    <option value="">Select Airport</option>
+                    <option value="">Select Arrival Airport</option>
                     <option value="EGLL">EGLL - London Heathrow</option>
                     <option value="EGKK">EGKK - London Gatwick</option>
                     <option value="EGCC">EGCC - Manchester</option>
