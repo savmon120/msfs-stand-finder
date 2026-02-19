@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Basic security - require a secret key in query params
-  const { secret } = req.query;
+  const { secret, force } = req.query;
   
   if (secret !== process.env.ADMIN_SECRET) {
     return res.status(401).json({ error: 'Unauthorized - invalid secret' });
@@ -16,13 +16,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Check if already seeded
+    // Check if already seeded (unless force=true)
     const existingAirports = await prisma.airport.count();
-    if (existingAirports > 0) {
+    if (existingAirports > 0 && force !== 'true') {
       return res.status(400).json({ 
-        error: 'Database already seeded',
+        error: 'Database already seeded. Use ?force=true to reseed',
         airports: existingAirports 
       });
+    }
+
+    // Clear existing data if forcing reseed
+    if (force === 'true') {
+      await prisma.airlineTerminalAssignment.deleteMany();
+      await prisma.stand.deleteMany();
+      await prisma.aircraft.deleteMany();
+      await prisma.airport.deleteMany();
     }
 
     // Create aircraft types
