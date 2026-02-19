@@ -1,14 +1,8 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(_req: VercelRequest, res: VercelResponse) {
-  try {
-    const html = readFileSync(join(process.cwd(), 'public', 'index.html'), 'utf-8');
-    res.setHeader('Content-Type', 'text/html');
-    return res.status(200).send(html);
-  } catch (error) {
-    return res.status(200).send(`
+  res.setHeader('Content-Type', 'text/html');
+  return res.status(200).send(`
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -119,6 +113,5 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
     </script>
 </body>
 </html>
-    `);
-  }
+  `);
 }
