@@ -83,28 +83,23 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
             result.innerHTML = '<p>🔍 Searching for stand information...</p>';
             
             try {
-                const res = await fetch(\`/api/stand?flight=\${encodeURIComponent(flight)}\`);
+                const res = await fetch('/api/stand?flight=' + encodeURIComponent(flight));
                 const data = await res.json();
                 
                 if (res.ok) {
                     const confidencePercent = Math.round(data.confidence * 100);
-                    result.innerHTML = \`
-                        <div class="result">
-                            <div class="stand-number">Stand \${data.stand}</div>
-                            <div class="confidence">
-                                <strong>Confidence:</strong> \${confidencePercent}%
-                            </div>
-                            <div class="metadata">
-                                <p><strong>Flight:</strong> \${data.flight}</p>
-                                <p><strong>Airport:</strong> \${data.airport || 'Auto-detected'}</p>
-                                <p><strong>Terminal:</strong> \${data.terminal || 'N/A'}</p>
-                                <p><strong>Method:</strong> \${data.fallbackStageName}</p>
-                                <p><strong>Sources:</strong> \${data.sources.join(', ')}</p>
-                            </div>
-                        </div>
-                    \`;
+                    result.innerHTML = '<div class="result">' +
+                        '<div class="stand-number">Stand ' + data.stand + '</div>' +
+                        '<div class="confidence"><strong>Confidence:</strong> ' + confidencePercent + '%</div>' +
+                        '<div class="metadata">' +
+                        '<p><strong>Flight:</strong> ' + data.flight + '</p>' +
+                        '<p><strong>Airport:</strong> ' + (data.airport || 'Auto-detected') + '</p>' +
+                        '<p><strong>Terminal:</strong> ' + (data.terminal || 'N/A') + '</p>' +
+                        '<p><strong>Method:</strong> ' + data.fallbackStageName + '</p>' +
+                        '<p><strong>Sources:</strong> ' + data.sources.join(', ') + '</p>' +
+                        '</div></div>';
                 } else {
-                    result.innerHTML = \`<p style="color:red;">❌ \${data.error}</p>\`;
+                    result.innerHTML = '<p style="color:red;">❌ ' + data.error + '</p>';
                 }
             } catch (error) {
                 result.innerHTML = '<p style="color:red;">❌ Failed to connect to API</p>';
