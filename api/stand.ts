@@ -1,12 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { StandResolutionEngine } from '../src/services/stand-resolution.service';
 
 const prisma = new PrismaClient();
-const standEngine = new StandResolutionEngine(prisma);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -20,34 +17,74 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { flight, callsign, date, airport } = req.query;
+    const { flight, airport: airportIcao } = req.query;
 
-    if (!flight && !callsign) {
-      return res.status(400).json({
-        error: 'Either flight or callsign parameter required',
+    if (!flight) {
+      return res.status(400).json({ error: 'Flight parameter required' });
+    }
+
+    const flightStr = String(flight).toUpperCase();
+    const airlineMatch = flightStr.match(/^([A-Z]{2,3})/);
+    const airlineCode = airlineMatch ? airlineMatch[1] : null;
+
+    let airport;
+    if (airportIcao) {
+      airport = await prisma.airport.findUnique({
+        where: { id: String(airportIcao).toUpperCase() },
+      });
+    } else {
+      airport = await prisma.airport.findUnique({ where: { id: 'EGLL' } });
+    }
+
+    if (!airport) {
+      return res.status(404).json({ error: 'Airport not found' });
+    }
+
+    let terminal = null;
+    if (airlineCode) {
+      const assignment = await prisma.airlineTerminalAssignment.findFirst({
+        where: {
+          airportId: airport.id,
+          OR: [{ airlineIcao: airlineCode }, { airlineIata: airlineCode }],
+        },
+        orderBy: { priority: 'desc' },
+      });
+      terminal = assignment?.terminal || null;
+    }
+
+    const stands = await prisma.stand.findMany({
+      where: {
+        airportId: airport.id,
+        ...(terminal ? { terminal } : {}),
+        isActive: true,
+      },
+    });
+
+    if (stands.length === 0) {
+      return res.status(404).json({ 
+        error: 'No available stands found',
+        airport: airport.id,
+        terminal: terminal || 'unknown'
       });
     }
 
-    const flightInput = {
-      flightNumber: flight as string | undefined,
-      callsign: callsign as string | undefined,
-      date: date ? new Date(date as string) : undefined,
-      airport: airport as string | undefined,
-    };
-
-    const resolution = await standEngine.resolveStand(flightInput);
+    const selectedStand = stands[Math.floor(Math.random() * stands.length)];
 
     return res.status(200).json({
-      flight: flight || callsign,
-      airport: resolution.metadata?.airport || airport,
-      stand: resolution.stand,
-      confidence: resolution.confidence,
-      fallbackStage: resolution.fallbackStage,
-      fallbackStageName: resolution.fallbackStageName,
-      sources: resolution.dataSources,
-      terminal: resolution.terminal,
-      timestamp: resolution.timestamp,
-      metadata: resolution.metadata,
+      flight: flightStr,
+      airport: airport.id,
+      stand: selectedStand.standName,
+      confidence: terminal ? 0.8 : 0.5,
+      fallbackStage: terminal ? 'airline_terminal' : 'random',
+      fallbackStageName: terminal ? 'Airline Terminal Assignment' : 'Random Stand',
+      sources: ['database'],
+      terminal: terminal || selectedStand.terminal || 'N/A',
+      timestamp: new Date().toISOString(),
+      metadata: {
+        airport: airport.name,
+        airportIcao: airport.id,
+        airline: airlineCode,
+      },
     });
   } catch (error) {
     console.error('Stand resolution error:', error);
