@@ -18,7 +18,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { flight, callsign, airportIcao, standNumber, timestamp, source } = req.body;
+    const { flight, airportIcao, standNumber, timestamp, source } = req.body;
 
     // Validation
     if (!flight || !airportIcao || !standNumber) {
