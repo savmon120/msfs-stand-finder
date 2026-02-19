@@ -57,10 +57,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         "iataType" TEXT,
         "manufacturer" TEXT,
         "model" TEXT,
-        "wingspanM" DOUBLE PRECISION NOT NULL,
-        "lengthM" DOUBLE PRECISION NOT NULL,
+        "wingspanM" DOUBLE PRECISION,
+        "lengthM" DOUBLE PRECISION,
         "heightM" DOUBLE PRECISION,
-        "sizeCode" TEXT NOT NULL,
+        "sizeCode" TEXT,
+        "category" TEXT,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
