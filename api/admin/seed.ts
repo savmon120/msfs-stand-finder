@@ -203,13 +203,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
     });
 
-    // Create stands for Manchester Terminal 1
+    // Create stands for Manchester - Real gate names used by airlines
     const manchesterStands = await Promise.all([
-      prisma.stand.create({ data: { airportId: manchester.id, standName: '201', terminal: '1', latitude: 53.3540, longitude: -2.2755, maxWingspanM: 36.0, maxLengthM: 40.0, aircraftSizeCode: 'C' } }),
-      prisma.stand.create({ data: { airportId: manchester.id, standName: '202', terminal: '1', latitude: 53.3542, longitude: -2.2757, maxWingspanM: 36.0, maxLengthM: 40.0, aircraftSizeCode: 'C' } }),
-      prisma.stand.create({ data: { airportId: manchester.id, standName: '203', terminal: '1', latitude: 53.3544, longitude: -2.2759, maxWingspanM: 36.0, maxLengthM: 40.0, aircraftSizeCode: 'C' } }),
-      prisma.stand.create({ data: { airportId: manchester.id, standName: '204', terminal: '1', latitude: 53.3546, longitude: -2.2761, maxWingspanM: 36.0, maxLengthM: 40.0, aircraftSizeCode: 'C' } }),
-      prisma.stand.create({ data: { airportId: manchester.id, standName: '205', terminal: '1', latitude: 53.3548, longitude: -2.2763, maxWingspanM: 36.0, maxLengthM: 40.0, aircraftSizeCode: 'C' } }),
+      // Terminal 1 Pier A
+      prisma.stand.create({ data: { airportId: manchester.id, standName: 'A1', terminal: '1', latitude: 53.3540, longitude: -2.2755, maxWingspanM: 36.0, maxLengthM: 40.0, aircraftSizeCode: 'C' } }),
+      prisma.stand.create({ data: { airportId: manchester.id, standName: 'A2', terminal: '1', latitude: 53.3542, longitude: -2.2757, maxWingspanM: 36.0, maxLengthM: 40.0, aircraftSizeCode: 'C' } }),
+      prisma.stand.create({ data: { airportId: manchester.id, standName: 'A3', terminal: '1', latitude: 53.3544, longitude: -2.2759, maxWingspanM: 36.0, maxLengthM: 40.0, aircraftSizeCode: 'C' } }),
+      // Terminal 1 Pier B
+      prisma.stand.create({ data: { airportId: manchester.id, standName: 'B1', terminal: '1', latitude: 53.3546, longitude: -2.2761, maxWingspanM: 36.0, maxLengthM: 40.0, aircraftSizeCode: 'C' } }),
+      prisma.stand.create({ data: { airportId: manchester.id, standName: 'B2', terminal: '1', latitude: 53.3548, longitude: -2.2763, maxWingspanM: 36.0, maxLengthM: 40.0, aircraftSizeCode: 'C' } }),
+      // Terminal 2 Pier C
+      prisma.stand.create({ data: { airportId: manchester.id, standName: 'C1', terminal: '2', latitude: 53.3550, longitude: -2.2765, maxWingspanM: 36.0, maxLengthM: 40.0, aircraftSizeCode: 'C' } }),
+      prisma.stand.create({ data: { airportId: manchester.id, standName: 'C2', terminal: '2', latitude: 53.3552, longitude: -2.2767, maxWingspanM: 36.0, maxLengthM: 40.0, aircraftSizeCode: 'C' } }),
+      // Terminal 2 Pier D (where EasyJet typically operates)
+      prisma.stand.create({ data: { airportId: manchester.id, standName: 'D1', terminal: '2', latitude: 53.3554, longitude: -2.2769, maxWingspanM: 36.0, maxLengthM: 40.0, aircraftSizeCode: 'C' } }),
+      prisma.stand.create({ data: { airportId: manchester.id, standName: 'D2', terminal: '2', latitude: 53.3556, longitude: -2.2771, maxWingspanM: 36.0, maxLengthM: 40.0, aircraftSizeCode: 'C' } }),
+      prisma.stand.create({ data: { airportId: manchester.id, standName: 'D3', terminal: '2', latitude: 53.3558, longitude: -2.2773, maxWingspanM: 36.0, maxLengthM: 40.0, aircraftSizeCode: 'C' } }),
+      prisma.stand.create({ data: { airportId: manchester.id, standName: 'D4', terminal: '2', latitude: 53.3560, longitude: -2.2775, maxWingspanM: 36.0, maxLengthM: 40.0, aircraftSizeCode: 'C' } }),
+      // Remote stands (300 series)
+      prisma.stand.create({ data: { airportId: manchester.id, standName: '301', terminal: '2', latitude: 53.3562, longitude: -2.2777, maxWingspanM: 36.0, maxLengthM: 40.0, aircraftSizeCode: 'C' } }),
+      prisma.stand.create({ data: { airportId: manchester.id, standName: '302', terminal: '2', latitude: 53.3564, longitude: -2.2779, maxWingspanM: 36.0, maxLengthM: 40.0, aircraftSizeCode: 'C' } }),
+      prisma.stand.create({ data: { airportId: manchester.id, standName: '303', terminal: '2', latitude: 53.3566, longitude: -2.2781, maxWingspanM: 36.0, maxLengthM: 40.0, aircraftSizeCode: 'C' } }),
+      prisma.stand.create({ data: { airportId: manchester.id, standName: '304', terminal: '2', latitude: 53.3568, longitude: -2.2783, maxWingspanM: 36.0, maxLengthM: 40.0, aircraftSizeCode: 'C' } }),
     ]);
 
     // Create airline terminal assignments
@@ -230,6 +245,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           airlineIata: 'U2',
           terminal: 'North',
           priority: 1,
+        },
+      }),
+      prisma.airlineTerminalAssignment.create({
+        data: {
+          airportId: manchester.id,
+          airlineIcao: 'EZY',
+          airlineIata: 'U2',
+          terminal: '2',
+          priority: 1,
+          pier: 'D',
+          notes: 'EasyJet primarily uses Terminal 2 Pier D at Manchester',
         },
       }),
       prisma.airlineTerminalAssignment.create({

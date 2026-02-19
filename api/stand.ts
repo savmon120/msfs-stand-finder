@@ -3,20 +3,35 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 
 const prisma = new PrismaClient();
 
-// OpenSky Network API
+// OpenSky Network API - Search for flights by callsign in last 7 days
 async function getFlightFromOpenSky(flightNumber: string) {
   try {
-    const response = await fetch(`https://opensky-network.org/api/flights/all?begin=${Math.floor(Date.now() / 1000) - 86400}&end=${Math.floor(Date.now() / 1000)}`);
+    // Try last 7 days of data
+    const now = Math.floor(Date.now() / 1000);
+    const sevenDaysAgo = now - (7 * 86400);
+    
+    const response = await fetch(
+      `https://opensky-network.org/api/flights/all?begin=${sevenDaysAgo}&end=${now}`,
+      { headers: { 'User-Agent': 'Aviation-Stand-Finder/1.0' } }
+    );
+    
     if (!response.ok) return null;
     
     const data = await response.json() as any[];
-    const flight = data.find((f: any) => f.callsign?.trim().toUpperCase() === flightNumber);
+    
+    // Find most recent flight matching callsign
+    const matchingFlights = data
+      .filter((f: any) => f.callsign?.trim().toUpperCase() === flightNumber)
+      .sort((a: any, b: any) => (b.lastSeen || 0) - (a.lastSeen || 0));
+    
+    const flight = matchingFlights[0];
     
     if (flight && flight.estArrivalAirport) {
       return {
         callsign: flight.callsign.trim(),
         arrivalAirport: flight.estArrivalAirport.toUpperCase(),
         departureAirport: flight.estDepartureAirport?.toUpperCase(),
+        lastSeen: flight.lastSeen,
       };
     }
     return null;
@@ -81,6 +96,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     let terminal = null;
+    let pier = null;
     if (airlineCode) {
       const assignment = await prisma.airlineTerminalAssignment.findFirst({
         where: {
@@ -90,8 +106,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         orderBy: { priority: 'desc' },
       });
       terminal = assignment?.terminal || null;
+      pier = assignment?.pier || null;
     }
 
+    // Prioritize stands by pier match, then terminal match
     const stands = await prisma.stand.findMany({
       where: {
         airportId: airport.id,
@@ -108,7 +126,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const selectedStand = stands[Math.floor(Math.random() * stands.length)];
+    // Prefer stands matching the airline's assigned pier
+    let selectedStand;
+    if (pier) {
+      const pierStands = stands.filter(s => s.standName.startsWith(pier));
+      selectedStand = pierStands.length > 0 
+        ? pierStands[Math.floor(Math.random() * pierStands.length)]
+        : stands[Math.floor(Math.random() * stands.length)];
+    } else {
+      selectedStand = stands[Math.floor(Math.random() * stands.length)];
+    }
 
     return res.status(200).json({
       flight: flightStr,
