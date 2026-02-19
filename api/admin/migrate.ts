@@ -89,11 +89,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         "terminal" TEXT NOT NULL,
         "pier" TEXT,
         "priority" INTEGER NOT NULL DEFAULT 0,
+        "notes" TEXT,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY ("airportId") REFERENCES "Airport"("id") ON DELETE CASCADE ON UPDATE CASCADE
       );
     `);
+
+    // Add missing columns to AirlineTerminalAssignment if they don't exist
+    await prisma.$executeRawUnsafe(`ALTER TABLE "AirlineTerminalAssignment" ADD COLUMN IF NOT EXISTS "pier" TEXT;`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE "AirlineTerminalAssignment" ADD COLUMN IF NOT EXISTS "notes" TEXT;`);
 
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS "CrowdsourcedReport" (
